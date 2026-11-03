@@ -1,6 +1,7 @@
 import { loadState, saveState } from './db.js';
 import { PENDING_MEASURES } from './catalog.js';
 import {
+  MAX_BACKUP_BYTES,
   STOCK_EVENT_TYPES,
   addProduct,
   buildBackup,
@@ -300,14 +301,16 @@ async function exportBackup() {
   const now = new Date().toISOString();
   const nextState = { ...state, lastBackupAt: now, updatedAt: now };
   let backup;
+  let blob;
   try {
     backup = buildBackup(nextState, now);
+    blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+    if (blob.size > MAX_BACKUP_BYTES) throw new Error(`La copia supera el máximo de ${MAX_BACKUP_BYTES / 1024 / 1024} MB.`);
   } catch (error) {
     showGlobalError(`No se pudo generar la copia: ${error.message}`);
     return;
   }
   if (!await commit(nextState, 'Copia preparada. Elegí dónde guardar el archivo.', 'backup')) return;
-  const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
@@ -321,7 +324,7 @@ async function exportBackup() {
 async function importBackup(file) {
   if (!file) return;
   try {
-    if (file.size > 5 * 1024 * 1024) throw new Error('El archivo supera el máximo de 5 MB.');
+    if (file.size > MAX_BACKUP_BYTES) throw new Error(`El archivo supera el máximo de ${MAX_BACKUP_BYTES / 1024 / 1024} MB.`);
     const backup = JSON.parse(await file.text());
     const restored = validateBackup(backup);
     const confirmed = window.confirm(`Se reemplazarán los datos actuales por la copia del ${formatDate(backup.exportedAt)}.\n\nIncluye ${restored.products.length} productos y ${restored.history.length} registros. Esta acción no se puede deshacer salvo que tengas otra copia.\n\n¿Querés recuperarla?`);

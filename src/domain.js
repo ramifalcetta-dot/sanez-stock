@@ -2,6 +2,7 @@ import { BASE_CATALOG } from './catalog.js';
 
 export const STATE_VERSION = 1;
 export const BACKUP_FORMAT = 1;
+export const MAX_BACKUP_BYTES = 50 * 1024 * 1024;
 export const STOCK_EVENT_TYPES = new Set(['initial', 'entry', 'exit', 'correction']);
 
 const clone = (value) => structuredClone(value);
@@ -253,6 +254,28 @@ export function recordMovement(state, input, now, eventId) {
   return finish(next, now);
 }
 
+function getEffectiveDeltas(history) {
+  const effectiveDeltas = new Map();
+  const events = new Map();
+  for (const event of history) {
+    if (!STOCK_EVENT_TYPES.has(event.type)) continue;
+    let effectiveDelta = event.delta;
+    if (event.type === 'correction') {
+      const original = events.get(event.correctsId);
+      const baseDelta = effectiveDeltas.get(event.correctsId);
+      if (!original || baseDelta === undefined) fail('Una corrección no apunta a un movimiento de stock anterior.');
+      const correctedDelta = (baseDelta < 0 ? -1 : 1) * event.correctedQuantity;
+      effectiveDelta = correctedDelta - baseDelta;
+      const legacyDelta = correctedDelta - original.delta;
+      if (event.delta === legacyDelta && event.delta !== effectiveDelta) effectiveDelta = event.delta;
+      else effectiveDeltas.set(event.correctsId, correctedDelta);
+    }
+    effectiveDeltas.set(event.id, effectiveDelta);
+    events.set(event.id, event);
+  }
+  return effectiveDeltas;
+}
+
 export function correctMovement(state, movementId, correctedQuantity, reason, now, eventId) {
   requireDate(now);
   requireString(eventId, 'El identificador del registro', 120);
@@ -262,9 +285,10 @@ export function correctMovement(state, movementId, correctedQuantity, reason, no
   const original = next.history.find((item) => item.id === movementId);
   if (!original || !STOCK_EVENT_TYPES.has(original.type)) fail('El registro no admite una corrección de cantidad.');
   const product = findProduct(next, original.productId);
-  const sign = original.delta < 0 ? -1 : 1;
-  const correctedDelta = sign * correctedQuantity;
-  const adjustment = correctedDelta - original.delta;
+  const effectiveDeltas = getEffectiveDeltas(next.history);
+  const baseDelta = effectiveDeltas.get(original.id);
+  const correctedDelta = (baseDelta < 0 ? -1 : 1) * correctedQuantity;
+  const adjustment = correctedDelta - baseDelta;
   if (adjustment === 0) fail('La cantidad corregida es igual a la original.');
   const afterStock = product.quantity + adjustment;
   requireInteger(afterStock, 0, 'El stock resultante');
@@ -406,8 +430,23 @@ export function validateState(state) {
     if (!productIds.has(event.productId)) fail('El historial apunta a un producto inexistente.');
     eventIds.add(event.id);
   }
+  const balances = new Map(state.products.map((product) => [product.id, 0]));
+  const stockEvents = new Map();
   for (const event of state.history) {
-    if (event.type === 'correction' && !eventIds.has(event.correctsId)) fail('Una corrección apunta a un registro inexistente.');
+    if (!STOCK_EVENT_TYPES.has(event.type)) continue;
+    if (['initial', 'entry'].includes(event.type) && event.delta < 0) fail('Una entrada tiene el signo incorrecto.');
+    if (event.type === 'exit' && event.delta > 0) fail('Una salida tiene el signo incorrecto.');
+    const balance = balances.get(event.productId);
+    if (event.beforeStock !== balance) fail('El stock anterior de un registro no coincide con el saldo histórico.');
+    if (event.type === 'correction') {
+      const original = stockEvents.get(event.correctsId);
+      if (!original || original.productId !== event.productId) fail('Una corrección debe apuntar a un movimiento de stock anterior del mismo producto.');
+    }
+    stockEvents.set(event.id, event);
+    balances.set(event.productId, event.afterStock);
+  }
+  for (const product of state.products) {
+    if (product.quantity !== balances.get(product.id)) fail('El stock del producto no coincide con el saldo final del historial.');
   }
   return true;
 }

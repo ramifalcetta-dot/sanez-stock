@@ -4,6 +4,8 @@ Primera versión funcional de una app web instalable para controlar stock y prec
 
 **Estado de la entrega:** versión local revisada por Ramiro y publicada con autorización en [https://ramifalcetta-dot.github.io/sanez-stock/](https://ramifalcetta-dot.github.io/sanez-stock/). Safari, la instalación en pantalla de inicio y el modo avión todavía deben verificarse en un iPhone real.
 
+**Actualización corregida:** los cuatro hallazgos de revisión están corregidos localmente y todavía no se publicaron. Antes de publicarla hay que confirmar que el usuario guardó una copia de seguridad de sus datos reales.
+
 ## Ejecutar la revisión local
 
 Requisito: Node.js. Se probó con Node.js 24. No hay dependencias para instalar.
@@ -98,13 +100,15 @@ Si alguna prueba falla, anotar modelo de iPhone, versión de iOS, si estaba abie
 ```bash
 npm test
 npm run test:browser
+npm run test:upgrade
 ```
 
-- **21 pruebas unitarias/estáticas correctas:** cálculos, centavos, paquetes, cantidades inválidas, desbordes, stock negativo, mínimos, búsqueda, precios faltantes, edición, archivo, inmutabilidad histórica, correcciones, independencia del ejemplo, exportación, restauración y rechazo de respaldos inconsistentes. También se verifican manifiesto, íconos y recursos offline.
+- **30 pruebas unitarias/estáticas correctas:** cálculos, centavos, paquetes, cantidades inválidas, desbordes, stock negativo, mínimos, búsqueda, precios faltantes, edición, archivo, inmutabilidad histórica, correcciones repetidas actuales y heredadas, independencia del ejemplo, exportación, restauración, conciliación de saldos, commit de IndexedDB y límite compartido de respaldos. También se verifican manifiesto, íconos y recursos offline.
 - **11 comprobaciones de navegador correctas en Microsoft Edge:** alta mediante la interfaz, IndexedDB, entrada por paquetes, rechazo de salida inválida, corrección, persistencia tras recarga, descarga del respaldo, recuperación mediante un archivo real, recarga offline y ausencia de solicitudes externas. Se ejecutó con viewport móvil de 390 × 844.
+- **3 comprobaciones de actualización correctas en Microsoft Edge:** se inicia con el commit publicado `f287220`, se cargan productos, cantidades, precios y una corrección mediante la interfaz, se actualiza la caché `sanez-stock-v1` a `sanez-stock-v2` y se compara todo el estado antes y después. Luego se recarga sin red, se vuelve a comprobar la igualdad del estado y se verifica que el código offline incluya las correcciones. La prueba usa un perfil y datos temporales, nunca los datos reales del usuario.
 - Se hizo una revisión visual de las pantallas de primer ingreso y stock en modo oscuro.
 
-La prueba de navegador usa Edge instalado en Windows. Si estuviera en otra ubicación, se puede definir `EDGE_PATH`. No reemplaza las pruebas pendientes en Safari ni en un iPhone físico.
+Las pruebas de navegador usan Edge instalado en Windows. Si estuviera en otra ubicación, se puede definir `EDGE_PATH`. No reemplazan las pruebas pendientes en Safari, la actualización de una instalación existente ni el modo avión en un iPhone físico.
 
 ## Alojamiento HTTPS publicado
 

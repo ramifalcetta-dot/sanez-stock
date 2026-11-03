@@ -21,8 +21,11 @@ function runTransaction(database, mode, action) {
     const transaction = database.transaction(STORE_NAME, mode);
     const store = transaction.objectStore(STORE_NAME);
     const request = action(store);
-    request.onsuccess = () => resolve(request.result);
+    let result;
+    request.onsuccess = () => { result = request.result; };
     request.onerror = () => reject(request.error);
+    transaction.oncomplete = () => resolve(result);
+    transaction.onerror = () => reject(transaction.error ?? request.error);
     transaction.onabort = () => reject(transaction.error ?? new Error('No se pudo completar el guardado.'));
   });
 }
