@@ -2,7 +2,7 @@
 
 Primera versión funcional de una app web instalable para controlar stock y precios. Está pensada para iPhone, funciona sin backend y guarda los datos únicamente en el dispositivo.
 
-**Estado de la entrega:** lista para revisión local de Ramiro. No se publicó ni se contrató ningún servicio. Safari, la instalación en pantalla de inicio y el modo avión todavía deben verificarse en un iPhone real.
+**Estado de la entrega:** versión local revisada por Ramiro y publicada con autorización en [https://ramifalcetta-dot.github.io/sanez-stock/](https://ramifalcetta-dot.github.io/sanez-stock/). Safari, la instalación en pantalla de inicio y el modo avión todavía deben verificarse en un iPhone real.
 
 ## Ejecutar la revisión local
 
@@ -106,23 +106,17 @@ npm run test:browser
 
 La prueba de navegador usa Edge instalado en Windows. Si estuviera en otra ubicación, se puede definir `EDGE_PATH`. No reemplaza las pruebas pendientes en Safari ni en un iPhone físico.
 
-## Propuesta de alojamiento HTTPS, todavía no realizada
+## Alojamiento HTTPS publicado
 
-Después de la revisión, se propone **GitHub Pages** en una dirección estable como:
-
-`https://USUARIO.github.io/sanez-stock/`
-
-El nombre definitivo depende de la cuenta que autorice Ramiro. Es adecuado porque la app es completamente estática y ofrece HTTPS sin backend.
+La app está disponible en [https://ramifalcetta-dot.github.io/sanez-stock/](https://ramifalcetta-dot.github.io/sanez-stock/), alojada por **GitHub Pages** desde la rama `gh-pages` del repositorio público [ramifalcetta-dot/sanez-stock](https://github.com/ramifalcetta-dot/sanez-stock).
 
 Límites:
 
 - El código y los recursos publicados son accesibles públicamente; no se deben incluir respaldos ni datos reales en el repositorio.
-- El alojamiento gratuito está sujeto a las condiciones y cuotas vigentes del proveedor.
+- El alojamiento gratuito está sujeto a las condiciones y cuotas vigentes del proveedor, y puede despublicarse o eliminarse junto con el repositorio.
 - No ofrece cuentas, base de datos, sincronización ni respaldo automático.
 - Los datos siguen separados por dispositivo/navegador y las actualizaciones requieren publicar una nueva versión.
 - GitHub Pages sirve la app, pero no recibe los movimientos ni las copias que el usuario guarda en su iPhone.
-
-No se creó el repositorio, no se compró un dominio y no se publicó la app.
 
 ## Archivos principales
 
