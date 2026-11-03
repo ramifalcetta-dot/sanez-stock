@@ -1,0 +1,12 @@
+{
+  "name": "sanez-stock",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "App web instalable y privada para controlar stock y precios.",
+  "scripts": {
+    "start": "node tools/serve.mjs",
+    "test": "node --test tests/*.test.mjs",
+    "test:browser": "node tests/browser-smoke.mjs"
+  }
+}

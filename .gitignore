@@ -1,0 +1,5 @@
+node_modules/
+review-*.png
+sanez-stock-*.json
+.DS_Store
+Thumbs.db

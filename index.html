@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="es-AR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#faf8f3">
+  <meta name="description" content="Control de stock y precios de Sánez, guardado solo en este dispositivo.">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Sánez Stock">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" href="./assets/icon-192.png">
+  <link rel="apple-touch-icon" href="./assets/apple-touch-icon.png">
+  <link rel="stylesheet" href="./styles.css">
+  <title>Sánez Stock</title>
+</head>
+<body>
+  <div class="app" id="app">
+    <header>
+      <img class="logo" src="./assets/logo-sanez.png" alt="Logo de Sánez, coffee & service">
+      <div>
+        <div class="brand">SÁNEZ</div>
+        <div class="subtitle">Mi stock, a mano.</div>
+      </div>
+    </header>
+    <div class="demo" data-demo hidden>MODO EJEMPLO · Datos ficticios, no es tu stock real</div>
+    <main>
+      <div class="success" data-message role="status" hidden></div>
+      <div class="error global-error" data-global-error role="alert" hidden></div>
+
+      <section data-view="welcome" hidden>
+        <h2>¿Cómo querés empezar?</h2>
+        <p class="welcome-text">Todo queda guardado automáticamente en este iPhone. No hay cuentas ni sincronización.</p>
+        <div class="form-actions">
+          <button type="button" class="primary big-choice" data-action="start-example"><strong>Probar con ejemplos</strong><span>Productos, cantidades y precios ficticios</span></button>
+          <button type="button" class="big-choice" data-action="start-real"><strong>Empezar con mi stock</strong><span>Catálogo base, cantidades en cero y precios sin cargar</span></button>
+        </div>
+        <div class="notice calm">Los precios del catálogo 09/2026 son solo referencias de lista. Confirmá los costos y precios actuales.</div>
+        <p class="hint">Para instalarla desde Safari: Compartir → Agregar a pantalla de inicio.</p>
+      </section>
+
+      <section data-view="home" hidden>
+        <h2>Mi mercadería</h2>
+        <div class="summary" aria-live="polite">
+          <div class="metric">
+            <div class="label">Mi stock al costo</div>
+            <div class="amount" data-total-cost></div>
+            <div class="note" data-total-cost-note></div>
+          </div>
+          <div class="metric">
+            <div class="label">Mi stock a precio de venta</div>
+            <div class="amount" data-total-sale></div>
+            <div class="note" data-total-sale-note></div>
+          </div>
+        </div>
+        <div class="actions">
+          <button type="button" class="primary" data-action="entry"><span class="action-icon" aria-hidden="true">＋</span>Entró mercadería</button>
+          <button type="button" class="secondary-action" data-action="exit"><span class="action-icon" aria-hidden="true">−</span>Salió mercadería</button>
+        </div>
+        <div class="notice"><span aria-hidden="true">!</span><span data-low></span></div>
+        <div class="section-head">
+          <h3 data-products-title>Mis productos</h3>
+          <button type="button" data-action="add"><span aria-hidden="true">＋</span>Agregar</button>
+        </div>
+        <div class="search"><input type="search" aria-label="Buscar producto" placeholder="Buscar por nombre o medida" data-search></div>
+        <div data-products></div>
+        <button type="button" class="text-button" data-action="toggle-archived"></button>
+      </section>
+
+      <section data-view="move" hidden>
+        <button type="button" class="back" data-action="back">← Volver</button>
+        <h2 data-move-title></h2>
+        <form data-move-form>
+          <label for="sz-product">Producto</label>
+          <select id="sz-product" name="product" required></select>
+          <p class="hint" data-current></p>
+          <div class="twocol">
+            <div><label for="sz-mode">¿Cómo lo contás?</label><select id="sz-mode" name="mode"><option value="unit">Unidades</option><option value="pack">Paquetes</option></select></div>
+            <div><label for="sz-qty">Cantidad</label><input id="sz-qty" name="quantity" type="number" inputmode="numeric" min="1" step="1" value="1" required></div>
+          </div>
+          <div class="preview" data-move-preview aria-live="polite"></div>
+          <p class="error" data-move-error role="alert" hidden></p>
+          <div class="form-actions"><button class="primary" type="submit">Confirmar movimiento</button><button type="button" data-action="back">Cancelar</button></div>
+        </form>
+      </section>
+
+      <section data-view="edit" hidden>
+        <button type="button" class="back" data-action="back">← Volver</button>
+        <h2 data-edit-title></h2>
+        <form data-edit-form>
+          <label for="sz-name">Nombre del producto</label>
+          <input id="sz-name" name="name" maxlength="90" autocomplete="off" required>
+          <label for="sz-measure">Medida <span class="optional">(opcional)</span></label>
+          <input id="sz-measure" name="measure" maxlength="60" autocomplete="off" placeholder="Ej.: 30 × 22 × 9">
+          <div class="twocol">
+            <div><label for="sz-pack">Unidades por paquete</label><input id="sz-pack" name="pack" type="number" inputmode="numeric" min="1" step="1" required></div>
+            <div><label for="sz-min">Avisarme al quedar</label><input id="sz-min" name="minimum" type="number" inputmode="numeric" min="0" step="1" required><p class="hint">Unidades o menos</p></div>
+          </div>
+          <label for="sz-cost">Precio de compra por unidad ($)</label>
+          <input id="sz-cost" name="cost" type="text" inputmode="decimal" placeholder="Sin cargar" autocomplete="off">
+          <label for="sz-sale">Precio de venta por unidad ($)</label>
+          <input id="sz-sale" name="sale" type="text" inputmode="decimal" placeholder="Sin cargar" autocomplete="off">
+          <label for="sz-packsale">Precio de venta por paquete ($) <span class="optional">(opcional)</span></label>
+          <input id="sz-packsale" name="packsale" type="text" inputmode="decimal" autocomplete="off">
+          <p class="hint">Usá por ejemplo 150 o 150,50. El precio por paquete no cambia la valoración estimada por unidad.</p>
+          <div data-initial-wrap><label for="sz-initial">Unidades que tenés ahora</label><input id="sz-initial" name="initial" type="number" inputmode="numeric" min="0" step="1" value="0" required></div>
+          <div class="reference" data-reference hidden></div>
+          <p class="error" data-edit-error role="alert" hidden></p>
+          <div class="form-actions">
+            <button class="primary" type="submit">Guardar producto</button>
+            <button class="secondary-action" type="button" data-action="archive" hidden></button>
+            <button type="button" data-action="back">Cancelar</button>
+          </div>
+        </form>
+      </section>
+
+      <section data-view="history" hidden>
+        <h2>Historial</h2>
+        <p class="hint history-intro">Los registros no se borran. Las correcciones quedan identificadas y conservan el movimiento original.</p>
+        <div data-history></div>
+      </section>
+
+      <section data-view="correction" hidden>
+        <button type="button" class="back" data-action="history">← Volver al historial</button>
+        <h2>Corregir movimiento</h2>
+        <div class="reference" data-correction-original></div>
+        <form data-correction-form>
+          <label for="sz-corrected">Cantidad correcta del movimiento original</label>
+          <input id="sz-corrected" name="corrected" type="number" inputmode="numeric" min="1" step="1" required>
+          <p class="hint">El stock actual se ajustará por la diferencia. El registro original no se modifica.</p>
+          <label for="sz-reason">Motivo de la corrección</label>
+          <input id="sz-reason" name="reason" maxlength="200" autocomplete="off" required placeholder="Ej.: conté mal el paquete">
+          <p class="error" data-correction-error role="alert" hidden></p>
+          <div class="form-actions"><button class="primary" type="submit">Guardar corrección</button><button type="button" data-action="history">Cancelar</button></div>
+        </form>
+      </section>
+
+      <section data-view="backup" hidden>
+        <h2>Datos y respaldo</h2>
+        <div class="summary backup-summary">
+          <div class="metric"><div class="label">Última copia generada</div><div class="backup-date" data-last-backup></div><div class="note" data-backup-reminder></div></div>
+        </div>
+        <p>“Guardar copia” genera un archivo con productos, stock, precios e historial. Vos elegís dónde guardarlo.</p>
+        <div class="form-actions">
+          <button type="button" class="primary" data-action="export">Guardar copia</button>
+          <button type="button" data-action="import">Recuperar copia</button>
+          <input type="file" accept="application/json,.json" data-import-file hidden>
+        </div>
+        <div class="notice calm">Recuperar una copia reemplaza la información actual. Primero se valida el archivo y después se te pide confirmación.</div>
+        <h3>Privacidad y almacenamiento</h3>
+        <p class="hint block">Los datos se guardan solo en este navegador y dispositivo. No se envían a servidores, no hay analítica y cada iPhone tiene información independiente.</p>
+        <p class="hint block">El almacenamiento local no reemplaza un respaldo. Si borrás los datos del sitio, desinstalás o el sistema libera espacio, podrías perderlos.</p>
+        <details class="pending">
+          <summary>Medidas pendientes de confirmar</summary>
+          <div data-pending-measures></div>
+        </details>
+        <details class="pending">
+          <summary>Instalar en este iPhone</summary>
+          <p class="hint block">Abrí la dirección HTTPS en Safari, tocá Compartir y elegí “Agregar a pantalla de inicio”. La primera carga necesita internet; después funciona sin conexión.</p>
+        </details>
+        <button type="button" class="secondary-action exit-example" data-action="exit-example" hidden>Salir del modo ejemplo</button>
+      </section>
+    </main>
+    <nav class="tabs" data-tabs aria-label="Secciones" hidden>
+      <button type="button" data-tab="home"><span aria-hidden="true">▦</span>Stock</button>
+      <button type="button" data-tab="history"><span aria-hidden="true">≡</span>Historial</button>
+      <button type="button" data-tab="backup"><span aria-hidden="true">↧</span>Respaldo</button>
+    </nav>
+    <footer><span data-save-status>Los datos quedan en este dispositivo</span> · Sin sincronización</footer>
+  </div>
+  <script type="module" src="./src/app.js"></script>
+</body>
+</html>

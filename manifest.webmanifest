@@ -1,0 +1,25 @@
+{
+  "name": "Sánez Stock",
+  "short_name": "Sánez Stock",
+  "description": "Control sencillo de stock y precios, privado y sin conexión.",
+  "lang": "es-AR",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#faf8f3",
+  "theme_color": "#faf8f3",
+  "icons": [
+    {
+      "src": "./assets/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./assets/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
