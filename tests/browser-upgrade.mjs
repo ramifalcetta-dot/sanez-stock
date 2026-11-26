@@ -10,7 +10,7 @@ import { promisify } from 'node:util';
 import { execFile } from 'node:child_process';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
-const previousVersion = 'f287220';
+const previousVersion = '600583d'; // versión publicada antes del rediseño SANEZ-UI-02
 const edgePath = process.env.EDGE_PATH || 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe';
 const temporary = await mkdtemp(join(tmpdir(), 'sanez-stock-upgrade-'));
 const oldRoot = join(temporary, 'old');
@@ -141,8 +141,8 @@ try {
     await mkdir(dirname(destination), { recursive: true });
     await writeFile(destination, contents.stdout);
   }
-  assert.match(await readFile(join(oldRoot, 'sw.js'), 'utf8'), /sanez-stock-v1/);
-  assert.doesNotMatch(await readFile(join(oldRoot, 'src/domain.js'), 'utf8'), /MAX_BACKUP_BYTES/);
+  assert.match(await readFile(join(oldRoot, 'sw.js'), 'utf8'), /sanez-stock-v2/);
+  assert.doesNotMatch(await readFile(join(oldRoot, 'styles.css'), 'utf8'), /--espresso/);
 
   const appPort = await freePort();
   const debugPort = await freePort();
@@ -220,23 +220,23 @@ try {
   await cdp.evaluate(`navigator.serviceWorker.ready`);
   await reload();
   await waitForHome();
-  await cdp.waitFor(`navigator.serviceWorker.controller && caches.has('sanez-stock-v1')`, 'caché de la versión anterior');
+  await cdp.waitFor(`navigator.serviceWorker.controller && caches.has('sanez-stock-v2')`, 'caché de la versión anterior');
   const before = await readStoredState();
   const product = before.products.find((item) => item.name === 'Producto previo a actualizar');
   assert.equal(product.quantity, 17);
   assert.equal(product.costCents, 1234);
   assert.equal(product.saleCents, 2345);
   assert.equal(before.history.at(-1).type, 'correction');
-  check('la versión publicada anterior conserva datos reales de prueba y su caché v1');
+  check('la versión publicada anterior conserva datos reales de prueba y su caché v2');
 
   servingRoot = root;
   await reload(true);
-  await cdp.waitFor(`caches.has('sanez-stock-v2')`, 'instalación de la caché nueva');
-  await cdp.waitFor(`caches.has('sanez-stock-v2').then(async (hasNew) => hasNew && !(await caches.has('sanez-stock-v1')))`, 'service worker nuevo activo y caché anterior eliminada');
+  await cdp.waitFor(`caches.has('sanez-stock-v3')`, 'instalación de la caché nueva');
+  await cdp.waitFor(`caches.has('sanez-stock-v3').then(async (hasNew) => hasNew && !(await caches.has('sanez-stock-v2')))`, 'service worker nuevo activo y caché anterior eliminada');
   await reload();
   await waitForHome();
   assert.deepEqual(await readStoredState(), before);
-  check('la actualización a v2 no modifica productos, cantidades, precios ni historial');
+  check('la actualización a v3 no modifica productos, cantidades, precios ni historial');
 
   await cdp.call('Network.emulateNetworkConditions', { offline: true, latency: 0, downloadThroughput: 0, uploadThroughput: 0 });
   await reload();
@@ -255,6 +255,7 @@ try {
   assert.equal(offlineCheck.limit, 50 * 1024 * 1024);
   assert.equal(offlineCheck.quantity, 16);
   assert.equal(offlineCheck.delta, -1);
+  assert.ok(await cdp.evaluate(`getComputedStyle(document.documentElement).getPropertyValue('--espresso').trim() !== '' && document.querySelector('.decor') !== null`), 'sin conexión se ve el diseño nuevo');
   assert.deepEqual(await readStoredState(), before);
   check('la apertura offline usa el código nuevo, conserva el estado y calcula bien una segunda corrección sin guardarla');
 

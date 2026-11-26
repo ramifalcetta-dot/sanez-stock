@@ -15,15 +15,31 @@
   <title>Sánez Stock</title>
 </head>
 <body>
+  <svg class="sprite" aria-hidden="true" focusable="false">
+    <symbol id="i-in" viewBox="0 0 24 24"><path d="M12 3v11m0 0-4-4m4 4 4-4M4 14v6h16v-6"/></symbol>
+    <symbol id="i-out" viewBox="0 0 24 24"><path d="M12 14V3m0 0L8 7m4-4 4 4M4 14v6h16v-6"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="m20 20-4.4-4.4"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 3.5 21.5 20h-19z"/><path d="M12 10v4.5M12 17.2v.3"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7"/></symbol>
+    <symbol id="i-edit" viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z"/></symbol>
+    <symbol id="i-stock" viewBox="0 0 24 24"><path d="M12 3 20 7.5v9L12 21l-8-4.5v-9z"/><path d="m4 7.5 8 4.5 8-4.5M12 12v9"/></symbol>
+    <symbol id="i-history" viewBox="0 0 24 24"><rect x="5" y="3.5" width="14" height="17" rx="2"/><path d="M8.5 8.5h7M8.5 12h7M8.5 15.5h4.5"/></symbol>
+    <symbol id="i-backup" viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="4.5" rx="1"/><path d="M5 9v9.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9M10 13h4"/></symbol>
+    <symbol id="i-chevron" viewBox="0 0 24 24"><path d="m9.5 5.5 6.5 6.5-6.5 6.5"/></symbol>
+  </svg>
   <div class="app" id="app">
     <header>
-      <img class="logo" src="./assets/logo-sanez.png" alt="Logo de Sánez, coffee & service">
-      <div>
-        <div class="brand">SÁNEZ</div>
-        <div class="subtitle">Mi stock, a mano.</div>
+      <img class="decor" src="./assets/decoracion-cafe.webp" alt="" width="480" height="340" decoding="async">
+      <div class="brand-row">
+        <img class="logo" src="./assets/logo-sanez.png" alt="Logo de Sánez, coffee & service">
+        <div class="brand-text">
+          <div class="brand">SÁNEZ</div>
+          <div class="subtitle">Mi stock, a mano.</div>
+          <div class="demo" data-demo hidden><strong>MODO EJEMPLO</strong> Datos ficticios, no es tu stock real</div>
+        </div>
       </div>
     </header>
-    <div class="demo" data-demo hidden>MODO EJEMPLO · Datos ficticios, no es tu stock real</div>
     <main>
       <div class="success" data-message role="status" hidden></div>
       <div class="error global-error" data-global-error role="alert" hidden></div>
@@ -40,36 +56,36 @@
       </section>
 
       <section data-view="home" hidden>
-        <h2>Mi mercadería</h2>
-        <div class="summary" aria-live="polite">
+        <h2 class="page-title">Mi mercadería</h2>
+        <div class="actions">
+          <button type="button" class="primary action-entry" data-action="entry"><svg class="icon" aria-hidden="true"><use href="#i-in"/></svg>Entrada</button>
+          <button type="button" class="action-exit" data-action="exit"><svg class="icon" aria-hidden="true"><use href="#i-out"/></svg>Salida</button>
+        </div>
+        <div class="search"><svg class="icon" aria-hidden="true"><use href="#i-search"/></svg><input type="search" aria-label="Buscar producto" placeholder="Buscar por nombre o medida" data-search></div>
+        <div class="section-head">
+          <h3 data-products-title>Mis productos</h3>
+          <button type="button" class="add-button" data-action="add"><svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg>Agregar</button>
+        </div>
+        <div class="stock-notice" data-low-notice><svg class="icon" aria-hidden="true"><use href="#i-alert" data-low-icon/></svg><span data-low></span></div>
+        <div class="product-list" data-products></div>
+        <div class="summary home-summary" aria-live="polite">
           <div class="metric">
-            <div class="label">Mi stock al costo</div>
+            <div class="label">Al costo</div>
             <div class="amount" data-total-cost></div>
             <div class="note" data-total-cost-note></div>
           </div>
           <div class="metric">
-            <div class="label">Mi stock a precio de venta</div>
+            <div class="label">Venta estimada</div>
             <div class="amount" data-total-sale></div>
             <div class="note" data-total-sale-note></div>
           </div>
         </div>
-        <div class="actions">
-          <button type="button" class="primary" data-action="entry"><span class="action-icon" aria-hidden="true">＋</span>Entró mercadería</button>
-          <button type="button" class="secondary-action" data-action="exit"><span class="action-icon" aria-hidden="true">−</span>Salió mercadería</button>
-        </div>
-        <div class="notice"><span aria-hidden="true">!</span><span data-low></span></div>
-        <div class="section-head">
-          <h3 data-products-title>Mis productos</h3>
-          <button type="button" data-action="add"><span aria-hidden="true">＋</span>Agregar</button>
-        </div>
-        <div class="search"><input type="search" aria-label="Buscar producto" placeholder="Buscar por nombre o medida" data-search></div>
-        <div data-products></div>
         <button type="button" class="text-button" data-action="toggle-archived"></button>
       </section>
 
-      <section data-view="move" hidden>
+      <section data-view="move" class="move-view" hidden>
         <button type="button" class="back" data-action="back">← Volver</button>
-        <h2 data-move-title></h2>
+        <h2 class="move-title page-title"><svg class="icon" aria-hidden="true"><use href="#i-in" data-move-icon/></svg><span data-move-title></span></h2>
         <form data-move-form>
           <label for="sz-product">Producto</label>
           <select id="sz-product" name="product" required></select>
@@ -86,7 +102,8 @@
 
       <section data-view="edit" hidden>
         <button type="button" class="back" data-action="back">← Volver</button>
-        <h2 data-edit-title></h2>
+        <h2 class="page-title" data-edit-title></h2>
+        <div class="product-sheet" data-product-sheet hidden></div>
         <form data-edit-form>
           <label for="sz-name">Nombre del producto</label>
           <input id="sz-name" name="name" maxlength="90" autocomplete="off" required>
@@ -162,9 +179,9 @@
       </section>
     </main>
     <nav class="tabs" data-tabs aria-label="Secciones" hidden>
-      <button type="button" data-tab="home"><span aria-hidden="true">▦</span>Stock</button>
-      <button type="button" data-tab="history"><span aria-hidden="true">≡</span>Historial</button>
-      <button type="button" data-tab="backup"><span aria-hidden="true">↧</span>Respaldo</button>
+      <button type="button" data-tab="home"><svg class="icon" aria-hidden="true"><use href="#i-stock"/></svg>Stock</button>
+      <button type="button" data-tab="history"><svg class="icon" aria-hidden="true"><use href="#i-history"/></svg>Historial</button>
+      <button type="button" data-tab="backup"><svg class="icon" aria-hidden="true"><use href="#i-backup"/></svg>Respaldo</button>
     </nav>
     <footer><span data-save-status>Los datos quedan en este dispositivo</span> · Sin sincronización</footer>
   </div>

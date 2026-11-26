@@ -1,4 +1,4 @@
-const CACHE_NAME = 'sanez-stock-v2';
+const CACHE_NAME = 'sanez-stock-v3';
 const APP_ASSETS = [
   './',
   './index.html',
@@ -9,6 +9,7 @@ const APP_ASSETS = [
   './src/db.js',
   './src/domain.js',
   './assets/logo-sanez.png',
+  './assets/decoracion-cafe.webp',
   './assets/icon-192.png',
   './assets/icon-512.png',
   './assets/apple-touch-icon.png',

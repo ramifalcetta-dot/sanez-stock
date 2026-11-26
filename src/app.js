@@ -39,6 +39,7 @@ let correctionId = null;
 let includeArchived = false;
 let message = '';
 let busy = false;
+let lastMovedId = null; // fila a destacar tras registrar un movimiento; se limpia al cambiar de pantalla
 
 function setSaveStatus(text) {
   $('[data-save-status]').textContent = text;
@@ -53,6 +54,7 @@ function showGlobalError(text) {
 function showView(view) {
   currentView = view;
   message = '';
+  lastMovedId = null;
   showGlobalError('');
   render();
   window.scrollTo({ top: 0, behavior: 'instant' });
@@ -108,6 +110,8 @@ function renderTotals() {
   const saleAmount = $('[data-total-sale]');
   costAmount.textContent = totals.missingCost ? 'Incompleto' : formatMoney(totals.costCents);
   saleAmount.textContent = totals.missingSale ? 'Incompleto' : formatMoney(totals.saleCents);
+  // Sólo las cifras largas se achican con su columna; las cortas conservan el tamaño de la referencia.
+  for (const element of [costAmount, saleAmount]) element.classList.toggle('is-long', element.textContent.length > 13);
   $('[data-total-cost-note]').textContent = totals.missingCost
     ? `Falta la compra en ${totals.missingCost} producto${totals.missingCost === 1 ? '' : 's'} con stock. Parcial conocido: ${formatMoney(totals.costCents)}.`
     : 'Según el precio de compra cargado';
@@ -122,6 +126,8 @@ function renderHome() {
   $('[data-low]').textContent = low.length
     ? `${low.length} producto${low.length === 1 ? ' necesita' : 's necesitan'} reposición`
     : 'Todos los productos activos están por encima del mínimo';
+  $('[data-low-notice]').classList.toggle('is-ok', !low.length);
+  $('[data-low-icon]').setAttribute('href', low.length ? '#i-alert' : '#i-check');
   $('[data-products-title]').textContent = includeArchived ? 'Productos archivados' : 'Mis productos';
   $('[data-action="toggle-archived"]').textContent = includeArchived ? 'Volver a productos activos' : 'Ver productos archivados';
   const term = $('[data-search]').value;
@@ -130,15 +136,20 @@ function renderHome() {
     const packs = Math.floor(product.quantity / product.unitsPerPack);
     const loose = product.quantity % product.unitsPerPack;
     const isLow = !product.archived && product.quantity <= product.minimum;
-    return `<article class="product">
-      <div class="product-title">${escapeHTML(product.name)}</div>
-      ${product.measure ? `<div class="measure">Medida: ${escapeHTML(product.measure)}</div>` : ''}
-      ${isLow ? '<div class="low-label">Stock bajo</div>' : ''}
-      <div class="product-row"><div><div class="stock">${formatNumber(product.quantity)} unidades</div>
-      <div class="note">${formatNumber(packs)} paq. de ${formatNumber(product.unitsPerPack)}${loose ? ` + ${formatNumber(loose)} sueltas` : ''}</div></div>
-      <button type="button" data-edit="${escapeHTML(product.id)}">Editar</button></div>
-      <div class="price-line">Compra: ${formatMoney(product.costCents)} · Venta: ${formatMoney(product.saleCents)}<br>Precios por unidad${product.packSaleCents !== null ? `<br>Venta por paquete: ${formatMoney(product.packSaleCents)}` : ''}</div>
-    </article>`;
+    const classes = ['product', isLow ? 'is-low' : '', product.id === lastMovedId && message ? 'just-moved' : ''].filter(Boolean).join(' ');
+    const missing = [product.costCents === null ? 'Compra: Sin cargar' : '', product.saleCents === null ? 'Venta: Sin cargar' : ''].filter(Boolean).join(' · ');
+    // La fila entera abre la ficha (precios, mínimo y edición); la flecha indica que hay más detalle.
+    return `<button type="button" class="${classes}" data-edit="${escapeHTML(product.id)}">
+      <span class="product-id">
+        <span class="product-title">${escapeHTML(product.name)}</span>
+        ${product.measure ? `<span class="measure">Medida: ${escapeHTML(product.measure)}</span>` : ''}
+        <span class="note">${formatNumber(packs)} paq. de ${formatNumber(product.unitsPerPack)}${loose ? ` + ${formatNumber(loose)} sueltas` : ''}</span>
+        ${missing ? `<span class="note missing">${missing}</span>` : ''}
+        ${isLow ? '<span class="low-label">Stock bajo</span>' : ''}
+      </span>
+      <span class="stock"><span class="stock-number">${formatNumber(product.quantity)}</span> <span class="stock-unit">unidades</span></span>
+      <svg class="icon chevron" aria-hidden="true"><use href="#i-chevron"/></svg>
+    </button>`;
   }).join('') || `<p class="hint">${includeArchived ? 'No hay productos archivados para mostrar.' : 'No hay productos con ese nombre o medida.'}</p>`;
 }
 
@@ -152,6 +163,8 @@ function showMove(nextDirection) {
   direction = nextDirection;
   const form = $('[data-move-form]');
   $('[data-move-title]').textContent = direction === 'entry' ? 'Entró mercadería' : 'Salió mercadería';
+  $('[data-view="move"]').dataset.direction = direction;
+  $('[data-move-icon]').setAttribute('href', direction === 'entry' ? '#i-in' : '#i-out');
   form.elements.product.innerHTML = products.map((product) => `<option value="${escapeHTML(product.id)}">${escapeHTML(product.name)}${product.measure ? ` · ${escapeHTML(product.measure)}` : ''}</option>`).join('');
   form.elements.quantity.value = 1;
   form.elements.mode.value = 'unit';
@@ -187,6 +200,24 @@ function referenceHTML(product) {
   return `<strong>Referencia de lista Sánez ${escapeHTML(reference.date)}</strong><br>Archivo: ${escapeHTML(reference.file)}<ul>${offers}</ul>Las cantidades son opciones de venta del catálogo, no existencias ni unidades por paquete. No son costos de compra ni precios actuales confirmados.`;
 }
 
+function productSheetHTML(product) {
+  const packs = Math.floor(product.quantity / product.unitsPerPack);
+  const loose = product.quantity % product.unitsPerPack;
+  const isLow = !product.archived && product.quantity <= product.minimum;
+  return `<div class="sheet-head">
+      <div class="sheet-name">${escapeHTML(product.name)}${product.measure ? `<span class="measure">Medida: ${escapeHTML(product.measure)}</span>` : ''}</div>
+      <div class="stock"><span class="stock-number">${formatNumber(product.quantity)}</span> <span class="stock-unit">unidades</span></div>
+    </div>
+    <p class="note">${formatNumber(packs)} paq. de ${formatNumber(product.unitsPerPack)}${loose ? ` + ${formatNumber(loose)} sueltas` : ''}${isLow ? ' · <span class="low-label">Stock bajo</span>' : ''}${product.archived ? ' · Archivado' : ''}</p>
+    <dl class="sheet-grid">
+      <div><dt>Compra:</dt><dd>${formatMoney(product.costCents)}</dd></div>
+      <div><dt>Venta:</dt><dd>${formatMoney(product.saleCents)}</dd></div>
+      <div><dt>Venta por paquete:</dt><dd>${product.packSaleCents !== null ? formatMoney(product.packSaleCents) : '—'}</dd></div>
+      <div><dt>Avisarme al quedar:</dt><dd>${formatNumber(product.minimum)} u.</dd></div>
+    </dl>
+    <p class="hint">Precios por unidad salvo el de paquete. Para cambiar datos, editá el formulario de abajo.</p>`;
+}
+
 function showEdit(productId) {
   editingId = productId;
   const product = state.products.find((item) => item.id === productId);
@@ -212,6 +243,8 @@ function showEdit(productId) {
   archiveButton.hidden = !product;
   archiveButton.textContent = product?.archived ? 'Desarchivar producto' : 'Archivar producto';
   $('[data-edit-error]').hidden = true;
+  $('[data-product-sheet]').innerHTML = product ? productSheetHTML(product) : '';
+  $('[data-product-sheet]').hidden = !product;
   showView('edit');
 }
 
@@ -384,6 +417,7 @@ $('[data-move-form]').addEventListener('submit', async (event) => {
       quantity: Number(form.elements.quantity.value),
     }, new Date().toISOString(), newId());
     const units = Math.abs(nextState.history.at(-1).delta);
+    lastMovedId = form.elements.product.value;
     await commit(nextState, `${direction === 'entry' ? 'Entrada' : 'Salida'} registrada: ${formatNumber(units)} unidades.`);
   } catch (error) {
     const element = $('[data-move-error]');
